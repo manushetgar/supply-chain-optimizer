@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "supply-chain-optimizer"
+version = "1.0.0"
+description = "AI-Driven Supply Chain Risk & Inventory Optimizer"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning", "ignore::PendingDeprecationWarning"]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [".venv", "build", "dist", "__pycache__"]

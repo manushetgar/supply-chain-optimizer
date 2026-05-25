@@ -1,0 +1,30 @@
+# Core data engineering
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Deep learning
+torch>=2.0.0
+pytorch-lightning>=2.1.0
+torchmetrics>=1.2.0
+
+# Explainable AI
+shap>=0.44.0
+
+# Agentic AI
+langgraph>=0.2.0
+langchain-core>=0.3.0
+pydantic>=2.5.0
+
+# MLOps
+mlflow>=2.9.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+
+# Deployment
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Testing & quality
+pytest>=7.4.0
+flake8>=6.1.0
