@@ -1,0 +1,58 @@
+# SAP AI Core BYOM serving template (KServe InferenceService).
+#
+# This Custom Resource Definition instructs SAP AI Core how to deploy the
+# custom PyTorch inference container. The image URI is rendered dynamically
+# via the {{inputs.parameters.image}} placeholder at execution time.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: supply-chain-stockout-predictor
+  labels:
+    # Executable identity surfaced in the SAP AI Launchpad.
+    ai.sap.com/version: "1.0.0"
+  annotations:
+    # Mandatory SAP AI Core metadata mapping the deployment to a scenario
+    # and executable registered in the SAP AI Launchpad.
+    scenarios.ai.sap.com/name: "supply-chain-risk-optimizer"
+    scenarios.ai.sap.com/description: "AI-driven supply chain stock-out risk & mitigation"
+    executables.ai.sap.com/name: "stockout-predictor"
+    executables.ai.sap.com/description: "Focal-loss MLP + SHAP + LangGraph agent"
+    artifacts.ai.sap.com/model.kind: "model"
+spec:
+  predictor:
+    # Restrict scheduling to a resource plan offered by SAP AI Core.
+    imagePullSecrets:
+      - name: "{{inputs.parameters.image_pull_secret}}"
+    minReplicas: 1
+    maxReplicas: 2
+    containers:
+      - name: kserve-container
+        # Dynamically rendered image URI (private registry pushed by CI/CD).
+        image: "{{inputs.parameters.image}}"
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+        env:
+          - name: PORT
+            value: "8080"
+          - name: LLM_PROVIDER
+            value: "mock"
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 15

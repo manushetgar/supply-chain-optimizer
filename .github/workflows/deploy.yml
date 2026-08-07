@@ -1,0 +1,61 @@
+name: CI/CD - Supply Chain Optimizer
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          # Fail on syntax errors / undefined names; treat the rest as warnings.
+          flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 src tests --count --max-line-length=100 --extend-ignore=E203,W503 --exit-zero --statistics
+
+      - name: Run pytest suite
+        run: pytest -q
+
+  build-and-push:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t supply-chain-optimizer:${{ github.sha }} .
+
+      - name: Mock push to private registry
+        run: |
+          # In production this authenticates and pushes to the SAP AI Core
+          # registry (e.g. Docker Hub / GCP AR / AWS ECR). Mocked here.
+          echo "Would tag and push: registry.example.com/supply-chain-optimizer:${{ github.sha }}"
+          echo "docker push registry.example.com/supply-chain-optimizer:${{ github.sha }}"
+
+      - name: Render serving template
+        run: |
+          # Validate the KServe serving template renders with the built image.
+          IMAGE="registry.example.com/supply-chain-optimizer:${{ github.sha }}"
+          sed "s|{{inputs.parameters.image}}|${IMAGE}|g" deployment/serving-template.yaml > /tmp/serving-rendered.yaml
+          echo "Rendered SAP AI Core serving template:"
+          cat /tmp/serving-rendered.yaml
